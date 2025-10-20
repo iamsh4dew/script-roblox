@@ -1,98 +1,130 @@
--- Criado para fins educacionais e visuais
+-- Criado para fins educacionais. NÃO afeta o servidor!
 
--- Services
-local UserInputService = game:GetService("UserInputService")
+local UIS = game:GetService("UserInputService")
 local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Criar ScreenGui
-local gui = Instance.new("ScreenGui")
-gui.Name = "CoinMenu"
-gui.ResetOnSpawn = false
+local lp = Players.LocalPlayer
+local gui = Instance.new("ScreenGui", lp:WaitForChild("PlayerGui"))
+gui.Name = "AutoMoedaEditor"
 gui.Enabled = false
-gui.Parent = playerGui
+gui.ResetOnSpawn = false
 
--- Criar Frame
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 300, 0, 180)
-frame.Position = UDim2.new(0.5, -150, 0.5, -90)
-frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+-- Tema escuro com sombra
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 350, 0, 300)
+frame.Position = UDim2.new(0.5, -175, 0.5, -150)
+frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.BorderSizePixel = 0
-frame.Visible = true
-frame.Parent = gui
 
--- UICorner
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 12)
-corner.Parent = frame
+local uicorner = Instance.new("UICorner", frame)
+uicorner.CornerRadius = UDim.new(0, 12)
 
 -- Título
-local title = Instance.new("TextLabel")
+local title = Instance.new("TextLabel", frame)
 title.Size = UDim2.new(1, 0, 0, 40)
+title.Text = "Editor de Moedas (Client)"
+title.TextColor3 = Color3.fromRGB(255,255,255)
 title.BackgroundTransparency = 1
-title.Text = "Definir Moedas"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.Parent = frame
 
--- Caixa de Texto
-local input = Instance.new("TextBox")
-input.PlaceholderText = "Quantidade de moedas"
-input.Size = UDim2.new(0.8, 0, 0, 40)
-input.Position = UDim2.new(0.1, 0, 0.4, 0)
-input.Font = Enum.Font.Gotham
-input.TextSize = 18
-input.TextColor3 = Color3.fromRGB(255, 255, 255)
-input.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-input.ClearTextOnFocus = false
-input.Parent = frame
+-- Scroll para múltiplas moedas
+local scroll = Instance.new("ScrollingFrame", frame)
+scroll.Size = UDim2.new(1, -20, 1, -60)
+scroll.Position = UDim2.new(0, 10, 0, 50)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarThickness = 6
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
 
-local inputCorner = Instance.new("UICorner")
-inputCorner.CornerRadius = UDim.new(0, 8)
-inputCorner.Parent = input
+local UIListLayout = Instance.new("UIListLayout", scroll)
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Botão Confirmar
-local button = Instance.new("TextButton")
-button.Text = "Confirmar"
-button.Size = UDim2.new(0.5, 0, 0, 35)
-button.Position = UDim2.new(0.25, 0, 0.75, 0)
-button.Font = Enum.Font.GothamBold
-button.TextSize = 18
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
-button.Parent = frame
+-- Função para buscar moedas no Player
+local function encontrarMoedas()
+	local moedas = {}
 
-local buttonCorner = Instance.new("UICorner")
-buttonCorner.CornerRadius = UDim.new(0, 8)
-buttonCorner.Parent = button
-
--- Valor de moedas local
-local coinValue = 0
-
--- Função do botão
-button.MouseButton1Click:Connect(function()
-	local text = input.Text
-	local number = tonumber(text)
-	if number then
-		coinValue = number
-		print("Moedas definidas para:", coinValue)
-
-		-- Simular no Client (exemplo: alterar um TextLabel fictício)
-		local coinLabel = player:FindFirstChild("PlayerGui"):FindFirstChild("CoinDisplay")
-		if coinLabel and coinLabel:IsA("TextLabel") then
-			coinLabel.Text = "Moedas: " .. coinValue
+	local function verificar(container)
+		for _, obj in pairs(container:GetChildren()) do
+			if obj:IsA("NumberValue") or obj:IsA("IntValue") then
+				if string.match(obj.Name:lower(), "coin") or string.match(obj.Name:lower(), "cash") or string.match(obj.Name:lower(), "money") then
+					table.insert(moedas, obj)
+				end
+			end
+			-- Recursivo
+			if #obj:GetChildren() > 0 then
+				verificar(obj)
+			end
 		end
-
-		gui.Enabled = false
 	end
-end)
 
--- Atalhos de teclado (F para abrir/fechar)
-UserInputService.InputBegan:Connect(function(inputObj, processed)
+	verificar(lp)
+	return moedas
+end
+
+-- Gerar UI dinamicamente
+local function gerarUI()
+	scroll:ClearAllChildren()
+	local moedas = encontrarMoedas()
+
+	for _, moeda in ipairs(moedas) do
+		local container = Instance.new("Frame", scroll)
+		container.Size = UDim2.new(1, 0, 0, 40)
+		container.BackgroundTransparency = 1
+
+		local label = Instance.new("TextLabel", container)
+		label.Text = moeda.Name
+		label.Font = Enum.Font.Gotham
+		label.TextSize = 16
+		label.TextColor3 = Color3.fromRGB(255, 255, 255)
+		label.Size = UDim2.new(0.4, 0, 1, 0)
+		label.BackgroundTransparency = 1
+
+		local box = Instance.new("TextBox", container)
+		box.PlaceholderText = tostring(moeda.Value)
+		box.Text = ""
+		box.Font = Enum.Font.Gotham
+		box.TextSize = 16
+		box.TextColor3 = Color3.fromRGB(255,255,255)
+		box.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+		box.Size = UDim2.new(0.4, 0, 1, 0)
+		box.Position = UDim2.new(0.4, 5, 0, 0)
+
+		local uicorner = Instance.new("UICorner", box)
+		uicorner.CornerRadius = UDim.new(0, 6)
+
+		local button = Instance.new("TextButton", container)
+		button.Text = "Setar"
+		button.Font = Enum.Font.GothamBold
+		button.TextSize = 14
+		button.TextColor3 = Color3.fromRGB(255,255,255)
+		button.BackgroundColor3 = Color3.fromRGB(70, 130, 180)
+		button.Size = UDim2.new(0.2, -5, 1, 0)
+		button.Position = UDim2.new(0.8, 5, 0, 0)
+
+		local btnCorner = Instance.new("UICorner", button)
+		btnCorner.CornerRadius = UDim.new(0, 6)
+
+		button.MouseButton1Click:Connect(function()
+			local val = tonumber(box.Text)
+			if val then
+				moeda.Value = val
+				box.PlaceholderText = tostring(val)
+			end
+		end)
+	end
+
+	wait()
+	scroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+end
+
+-- Toggle com F
+UIS.InputBegan:Connect(function(input, processed)
 	if processed then return end
-	if inputObj.KeyCode == Enum.KeyCode.F then
+	if input.KeyCode == Enum.KeyCode.F then
 		gui.Enabled = not gui.Enabled
+		if gui.Enabled then
+			gerarUI()
+		end
 	end
 end)
