@@ -586,5 +586,4 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Notificação inicial
-Notify("Script carregado com sucesso!", Color3.fromRGB(0, 255, 150))
+-- Notificação inicialNotify("Script carregado com sucesso!", Color3.fromRGB(0, 255, 150))
