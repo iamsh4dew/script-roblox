@@ -36,7 +36,7 @@ Main.Parent = ScreenGui
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
-Main Corner.Parent = Main
+MainCorner.Parent = Main
 
 -- Barra Superior
 local TopBar = Instance.new("Frame")
